@@ -60,7 +60,7 @@ def RestReader():
                 txtfile.write(robot_data)
                 txtfile.seek(0)
                 txtreader = TxtReader()
-                txtreader.read(txtfile, rawdata)
+                return txtreader.read(txtfile, rawdata)
             else:
                 htmlpath = self._rest_to_html(rstfile.name)
                 htmlfile = None
