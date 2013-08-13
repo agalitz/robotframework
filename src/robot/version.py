@@ -2,8 +2,8 @@
 
 import sys
 
-VERSION = 'trunk'
-RELEASE = '20130614'
+VERSION = '2.8.1'
+RELEASE = 'GSOC2013.0'
 TIMESTAMP = '20130614-123951'
 
 def get_version(sep=' '):
