@@ -18,6 +18,7 @@ from robot.errors import DataError
 from .htmlreader import HtmlReader
 from .txtreader import TxtReader
 
+
 def RestReader():
     try:
         from docutils.core import publish_cmdline
