@@ -39,12 +39,13 @@ def RestReader():
         def read(self, rstfile, rawdata):
             doctree = docutils.core.publish_doctree(rstfile.read())
 
-            def collect_robot_nodes(node, collected = []):
+            def collect_robot_nodes(node, collected=[]):
                 robot_tagname = 'literal_block'
-                robot_classes = ['code', 'robotframework']
+                robot_classes = frozenset(['code', 'robotframework'])
                 is_robot_node = (
                     node.tagname == robot_tagname
-                    and node.attributes.get('classes') == robot_classes
+                    and robot_classes <= frozenset(
+                        node.attributes.get('classes'))
                 )
                 if is_robot_node:
                     collected.append(node)
