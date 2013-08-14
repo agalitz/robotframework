@@ -56,9 +56,10 @@ def RestReader():
             robot_nodes = collect_robot_nodes(doctree)
 
             if robot_nodes:
-                robot_data = "\n\n".join([node.rawsource for node in robot_nodes])
+                robot_data = u'\n\n'.join(
+                    [node.rawsource for node in robot_nodes])
                 txtfile = tempfile.NamedTemporaryFile()
-                txtfile.write(robot_data)
+                txtfile.write(robot_data.encode('utf-8'))
                 txtfile.seek(0)
                 txtreader = TxtReader()
                 return txtreader.read(txtfile, rawdata)
