@@ -404,6 +404,47 @@ of the table::
     \             Directory Should Exist  ${path}
     ============  ======================  ============  ==========
 
+Apart from writing the test cases in reStructuredText documents in reST format,
+user can write the test cases in space separated format also. For writing test
+case in space separated format, ".. code:: robotframework" should be mentioned
+to indicate that the test case is starting. The actual test case would start
+from the next line with proper indentation.
+
+.. Note::
+
+   If the reStructuredText document contains space separated test cases,
+   Pygment needs to be installed in the working environment.
+
+The actual test case can  be written in a manner similar to shown earlier(in
+space separated format). Also same escaping rule needs to be followed.  For
+eg::
+
+    .. code:: robotframework
+
+       *** Settings ***
+
+       Library  OperatingSystem
+
+       *** Variables ***
+
+       ${MESSAGE}  Hello, world!
+
+       *** Test Cases ***
+
+       My Test
+           [Documentation]  Example test
+           Log  ${MESSAGE}
+           My Keyword  /tmp
+
+       Another Test
+           Should Be Equal  ${MESSAGE}  Hello, world!
+
+       *** Keywords ***
+
+       My Keyword
+           [Arguments]  ${path}
+           Directory Should Exist  ${path}
+
 Editing test data
 `````````````````
 
