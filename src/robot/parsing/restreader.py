@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 import tempfile
-import os
 from robot.errors import DataError
 from .htmlreader import HtmlReader
 from .txtreader import TxtReader
@@ -21,9 +20,10 @@ from .txtreader import TxtReader
 
 def RestReader():
     try:
-        from docutils.core import publish_cmdline
-        from docutils.parsers.rst import directives
         import docutils.core
+        from docutils.parsers.rst import DirectiveError
+        from docutils.parsers.rst.directives import register_directive
+        from docutils.parsers.rst.directives import body
     except ImportError:
         raise DataError("Using reStructuredText test data requires having "
                         "'docutils' module installed.")
@@ -32,53 +32,46 @@ def RestReader():
     # See e.g. ug2html.py for an example how custom directives are created.
     ignorer = lambda *args: []
     ignorer.content = 1
-    directives.register_directive('sourcecode', ignorer)
+    register_directive('sourcecode', ignorer)
 
-    class RestReader(HtmlReader):
+    # Override default CodeBlock with a derived custom directive, which can
+    # capture Robot Framework test suite snippets and support execution also
+    # when Pygments is not installed or it is not new enough to support
+    # robotframework-language.
+    class RobotAwareCodeBlock(body.CodeBlock):
+        def run(self):
+            if u'robotframework' in self.arguments:
+                document = self.state_machine.document
+                robot_source = u'\n'.join(self.content)
+                if not hasattr(document, '_robot_source'):
+                    document._robot_source = robot_source
+                else:
+                    document._robot_source += u'\n' + robot_source
+            try:
+                return super(RobotAwareCodeBlock, self).run()
+            except DirectiveError:
+                self.arguments = []
+                return super(RobotAwareCodeBlock, self).run()
+    register_directive('code', RobotAwareCodeBlock)
+
+    class RestReader:
 
         def read(self, rstfile, rawdata):
             doctree = docutils.core.publish_doctree(rstfile.read())
 
-            def collect_robot_nodes(node, collected=[]):
-                robot_tagname = 'literal_block'
-                robot_classes = frozenset(['code', 'robotframework'])
-                is_robot_node = (
-                    node.tagname == robot_tagname
-                    and robot_classes <= frozenset(
-                        node.attributes.get('classes'))
-                )
-                if is_robot_node:
-                    collected.append(node)
-                else:
-                    for node in node.children:
-                        collected = collect_robot_nodes(node, collected)
-                return collected
-
-            robot_nodes = collect_robot_nodes(doctree)
-
-            if robot_nodes:
-                robot_data = u'\n\n'.join(
-                    [node.rawsource for node in robot_nodes])
-                txtfile = tempfile.NamedTemporaryFile()
-                txtfile.write(robot_data.encode('utf-8'))
+            if hasattr(doctree, '_robot_source'):
+                txtfile = tempfile.NamedTemporaryFile(suffix='.robot')
+                txtfile.write(doctree._robot_source.encode('utf-8'))
                 txtfile.seek(0)
                 txtreader = TxtReader()
                 return txtreader.read(txtfile, rawdata)
             else:
-                htmlpath = self._rest_to_html(rstfile.name)
-                htmlfile = None
-                try:
-                    htmlfile = open(htmlpath, 'rb')
-                    return HtmlReader.read(self, htmlfile, rawdata)
-                finally:
-                    if htmlfile:
-                        htmlfile.close()
-                    os.remove(htmlpath)
-
-        def _rest_to_html(self, rstpath):
-            filedesc, htmlpath = tempfile.mkstemp('.html')
-            os.close(filedesc)
-            publish_cmdline(writer_name='html', argv=[rstpath, htmlpath])
-            return htmlpath
+                htmlfile = tempfile.NamedTemporaryFile(suffix='.html')
+                htmlfile.write(docutils.core.publish_from_doctree(
+                    doctree, writer_name='html',
+                    settings_overrides={'output_encoding': 'utf-8'}))
+                htmlfile.seek(0)
+                htmlreader = HtmlReader()
+                return htmlreader.read(htmlfile, rawdata)
 
     return RestReader()

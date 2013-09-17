@@ -82,17 +82,3 @@ Run Keyword If/Unless Docutils Installed
     [Arguments]  ${if kw}  ${unless kw}
     Run Keyword If  "${DOCUTILS INSTALLED}" == "YES"  ${if kw}
     Run Keyword Unless  "${DOCUTILS INSTALLED}" == "YES"  ${unless kw}
-
-Check Is Pygments Installed
-    ${output} =  Run  ${INTERPRETER} -c "import pygments"
-    ${PYGMENTS INSTALLED} =  Set Variable If  """${output}""" == ""  YES  NO
-    Set Suite Variable  $PYGMENTS INSTALLED
-
-Make Test Non-critical And Fail It If Pygments Is Not Installed
-    Run Keyword If  "${PYGMENTS INSTALLED}" != "YES"  Remove Tags  regression
-    Run Keyword If  "${PYGMENTS INSTALLED}" != "YES"  Fail  This test is made non-critical and not executed because docutils module is not installed.
-
-Run Keyword If/Unless Pygments Installed
-    [Arguments]  ${if kw}  ${unless kw}
-    Run Keyword If  "${PYGMENTS INSTALLED}" == "YES"  ${if kw}
-    Run Keyword Unless  "${PYGMENTS INSTALLED}" == "YES"  ${unless kw}
