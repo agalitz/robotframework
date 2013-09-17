@@ -50,6 +50,9 @@ def RestReader():
             try:
                 return super(RobotAwareCodeBlock, self).run()
             except DirectiveError:
+                # Pygments was not found or it was not recent enough
+                # robotframework as a language. Reset language attribute and
+                # try again.
                 self.arguments = []
                 return super(RobotAwareCodeBlock, self).run()
     register_directive('code', RobotAwareCodeBlock)
