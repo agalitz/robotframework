@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import os
 import tempfile
 from robot.errors import DataError
 from .htmlreader import HtmlReader
@@ -70,7 +71,11 @@ def RestReader():
                 try:
                     return txtreader.read(txtfile, rawdata)
                 finally:
-                    txtfile.close()
+                    # Be defensive and ensure that the temp file gets removed:
+                    if txtfile:
+                        txtfile.close()
+                    if os.path.isfile(txtfile.name):
+                        os.remove(txtfile.name)
             else:
                 htmlfile = tempfile.NamedTemporaryFile(suffix='.html')
                 htmlfile.write(docutils.core.publish_from_doctree(
@@ -81,6 +86,10 @@ def RestReader():
                 try:
                     return htmlreader.read(htmlfile, rawdata)
                 finally:
-                    htmlfile.close()
+                    # Be defensive and ensure that the temp file gets removed:
+                    if htmlfile:
+                        htmlfile.close()
+                    if os.path.isfile(htmlfile.name):
+                        os.remove(htmlfile.name)
 
     return RestReader()
