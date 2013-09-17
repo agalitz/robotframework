@@ -27,7 +27,6 @@ We have a devious plan to rule the world with robots.
    ${quoted}   """this has """"many "" quotes """""
    ${single_quoted}   s'ingle'qu'ot'es''
 
-
 .. code:: robotframework
 
    ***Test Case***
@@ -48,7 +47,6 @@ We have a devious plan to rule the world with robots.
       Equals   @{table_listvar}[0]   bar
       Equals   @{table_listvar}[1]   foo
 
-
    Resource File   Keyword from ReST resource
       Keyword from ReST resource 2
       Equals   ${rest_resource_var}   ReST Resource Variable
@@ -60,12 +58,7 @@ We have a devious plan to rule the world with robots.
       Equals   ${file_var1}   ${-314}
       Equals   ${file_var2}   file variable 2
 
-
    Library Import   Fail If Dir Empty   ${CURDIR}
-
-
-
-
 
    Test Timeout   [Timeout]   1second
       [Document]   FAIL   Test timeout 1 second exceeded.
@@ -74,15 +67,8 @@ We have a devious plan to rule the world with robots.
    Keyword Timeout   [Document]   FAIL   Keyword timeout 1 second exceeded.
       Timeouted Keyword
 
-
-
-
-
-
-
    Empty Rows
       [Document]   Testing that empty rows are ignored.   FAIL Expected failure.
-
 
       Noop
 
@@ -108,8 +94,6 @@ We have a devious plan to rule the world with robots.
    My Keyword With Arg   [Arguments]   ${arg1}
       Keyword with no arguments
       Another Keyword   ${arg1}
-
-
 
    Another Keyword   [Arguments]   ${arg1}   ${arg2}=something
       Equals   ${arg1}   ${arg2}
