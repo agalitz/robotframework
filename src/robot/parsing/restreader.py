@@ -67,7 +67,10 @@ def RestReader():
                 txtfile.write(doctree._robot_source.encode('utf-8'))
                 txtfile.seek(0)
                 txtreader = TxtReader()
-                return txtreader.read(txtfile, rawdata)
+                try:
+                    return txtreader.read(txtfile, rawdata)
+                finally:
+                    txtfile.close()
             else:
                 htmlfile = tempfile.NamedTemporaryFile(suffix='.html')
                 htmlfile.write(docutils.core.publish_from_doctree(
@@ -75,6 +78,9 @@ def RestReader():
                     settings_overrides={'output_encoding': 'utf-8'}))
                 htmlfile.seek(0)
                 htmlreader = HtmlReader()
-                return htmlreader.read(htmlfile, rawdata)
+                try:
+                    return htmlreader.read(htmlfile, rawdata)
+                finally:
+                    htmlfile.close()
 
     return RestReader()
