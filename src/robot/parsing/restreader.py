@@ -22,7 +22,6 @@ from .txtreader import TxtReader
 def RestReader():
     try:
         import docutils.core
-        from docutils.parsers.rst import DirectiveError
         from docutils.parsers.rst.directives import register_directive
         from docutils.parsers.rst.directives import body
     except ImportError:
@@ -48,14 +47,7 @@ def RestReader():
                     document._robot_source = robot_source
                 else:
                     document._robot_source += u'\n' + robot_source
-            try:
-                return super(RobotAwareCodeBlock, self).run()
-            except DirectiveError:
-                # Pygments was not found or it was not recent enough
-                # robotframework as a language. Reset language attribute and
-                # try again.
-                self.arguments = []
-                return super(RobotAwareCodeBlock, self).run()
+            return []  # Parsed content is not really required
     register_directive('code', RobotAwareCodeBlock)
 
     class RestReader:
