@@ -35,53 +35,72 @@ def RestReader():
     register_directive('sourcecode', ignorer)
 
     # Override default CodeBlock with a derived custom directive, which can
-    # capture Robot Framework test suite snippets and support execution also
-    # when Pygments is not installed or it is not new enough to support
-    # robotframework-language.
+    # capture Robot Framework test suite snippets and then discard the content
+    # to speed up the parser.
     class RobotAwareCodeBlock(body.CodeBlock):
         def run(self):
             if u'robotframework' in self.arguments:
                 document = self.state_machine.document
-                robot_source = u'\n'.join(self.content)
-                if not hasattr(document, '_robot_source'):
-                    document._robot_source = robot_source
+                if RestReader.has_robotdata(document):
+                    robotdata = RestReader.get_robotdata(document) + u'\n'
+                    robotdata += u'\n'.join(self.content)
                 else:
-                    document._robot_source += u'\n' + robot_source
-            return []  # Parsed content is not really required
+                    robotdata = u'\n'.join(self.content)
+                RestReader.set_robotdata(document, robotdata)
+            return []  # Parsed content is not required for testing purposes
     register_directive('code', RobotAwareCodeBlock)
 
     class RestReader:
-
         def read(self, rstfile, rawdata):
             doctree = docutils.core.publish_doctree(rstfile.read())
-
-            if hasattr(doctree, '_robot_source'):
-                txtfile = tempfile.NamedTemporaryFile(suffix='.robot')
-                txtfile.write(doctree._robot_source.encode('utf-8'))
-                txtfile.seek(0)
-                txtreader = TxtReader()
-                try:
-                    return txtreader.read(txtfile, rawdata)
-                finally:
-                    # Be defensive and ensure that the temp file gets removed:
-                    if txtfile:
-                        txtfile.close()
-                    if os.path.isfile(txtfile.name):
-                        os.remove(txtfile.name)
+            if RestReader.has_robotdata(doctree):
+                delegate = RestReader.txtreader_read
             else:
-                htmlfile = tempfile.NamedTemporaryFile(suffix='.html')
-                htmlfile.write(docutils.core.publish_from_doctree(
-                    doctree, writer_name='html',
-                    settings_overrides={'output_encoding': 'utf-8'}))
-                htmlfile.seek(0)
-                htmlreader = HtmlReader()
-                try:
-                    return htmlreader.read(htmlfile, rawdata)
-                finally:
-                    # Be defensive and ensure that the temp file gets removed:
-                    if htmlfile:
-                        htmlfile.close()
-                    if os.path.isfile(htmlfile.name):
-                        os.remove(htmlfile.name)
+                delegate = RestReader.htmlreader_read
+            return delegate(doctree, rawdata)
+
+        @staticmethod
+        def has_robotdata(doctree):
+            return hasattr(doctree, '_robotdata')
+
+        @staticmethod
+        def set_robotdata(doctree, robotdata):
+            setattr(doctree, '_robotdata', robotdata)
+
+        @staticmethod
+        def get_robotdata(doctree, default=u''):
+            return getattr(doctree, '_robotdata', default)
+
+        @staticmethod
+        def txtreader_read(doctree, rawdata):
+            txtfile = tempfile.NamedTemporaryFile(suffix='.robot')
+            txtfile.write(RestReader.get_robotdata(doctree).encode('utf-8'))
+            txtfile.seek(0)
+            txtreader = TxtReader()
+            try:
+                return txtreader.read(txtfile, rawdata)
+            finally:
+                # Ensure that the temp file gets closed and deleted:
+                if txtfile:
+                    txtfile.close()
+                if os.path.isfile(txtfile.name):
+                    os.remove(txtfile.name)
+
+        @staticmethod
+        def htmlreader_read(doctree, rawdata):
+            htmlfile = tempfile.NamedTemporaryFile(suffix='.html')
+            htmlfile.write(docutils.core.publish_from_doctree(
+                doctree, writer_name='html',
+                settings_overrides={'output_encoding': 'utf-8'}))
+            htmlfile.seek(0)
+            htmlreader = HtmlReader()
+            try:
+                return htmlreader.read(htmlfile, rawdata)
+            finally:
+                # Ensure that the temp file gets closed and deleted:
+                if htmlfile:
+                    htmlfile.close()
+                if os.path.isfile(htmlfile.name):
+                    os.remove(htmlfile.name)
 
     return RestReader()
