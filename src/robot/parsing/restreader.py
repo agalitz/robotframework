@@ -52,7 +52,8 @@ def RestReader():
 
     class RestReader:
         def read(self, rstfile, rawdata):
-            doctree = docutils.core.publish_doctree(rstfile.read())
+            doctree = docutils.core.publish_doctree(
+                rstfile.read(), source_path=rstfile.name)
             if RestReader.has_robotdata(doctree):
                 delegate = RestReader.txtreader_read
             else:
