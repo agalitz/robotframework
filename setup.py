@@ -50,7 +50,7 @@ if 'bdist_wininst' in sys.argv:
 
 setup(
     name         = 'robotframework',
-    version      = get_version(sep=''),
+    version      = '2.8.2rc0',
     author       = 'Robot Framework Developers',
     author_email = 'robotframework@gmail.com',
     url          = 'http://robotframework.org',
